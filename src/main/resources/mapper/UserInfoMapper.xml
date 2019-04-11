@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.background.mapper.UserInfoMapper">
+    <!--创建一对多映射-->
+    <resultMap id="userInfoMap" type="com.background.pojo.UserInfo">
+        <id property="userId" column="userId"></id>
+        <result property="username" column="username"></result>
+        <result property="password" column="password"></result>
+        <result property="name" column="name"></result>
+        <result property="email" column="email"></result>
+        <result property="status" column="status"></result>
+        <collection property="roleInfos" ofType="com.background.pojo.RoleInfo">
+            <id property="roleid" column="roleid"></id>
+            <result property="rolename" column="rolename"></result>
+        </collection>
+    </resultMap>
+<select id="getUserInfo" resultType="com.background.pojo.UserInfo" >
+    select * from userInfo where status =1;
+</select>
+    <select id="getUserInfoById" resultType="com.background.pojo.UserInfo" parameterType="int" >
+        select * from userInfo where status =1 and userId=#{id};
+    </select>
+
+    <select id="getUserInfoMapById" resultMap="userInfoMap" parameterType="int">
+        select *
+        from userinfo u,user_role ur,roleinfo r where u.userid = #{id} and u.status=1
+        and ur.status = 1 and ur.userid = u.userid and r.roleid = ur.roleid
+    </select>
+
+    <select id="loginCheck" parameterType="com.background.pojo.UserInfo" resultType="com.background.pojo.UserInfo">
+        SELECT * from userinfo where status = 1 and username = #{username} and password = #{password}
+    </select>
+
+    <insert id="addUserInfo" parameterType="com.background.pojo.UserInfo">
+        INSERT INTO userinfo values(DEFAULT ,#{username},#{password},#{name},#{email},#{status})
+    </insert>
+    <select id="getUserInfosBy"  parameterType="com.background.pojo.UserInfo" resultType="com.background.pojo.UserInfo">
+              select * from  userInfo where status =1
+         <if test="username!=null and username !=''">
+             and username=#{username}
+         </if>
+         <if test="password!=null and password !=''">
+                and password=#{password}
+         </if>
+         <if test="email!=null and email !=''">
+                and email=#{email}
+         </if>
+         <if test="name!=null and name !=''">
+                and name=#{name}
+         </if>
+            <if test="userId!=null and userId !=''">
+                and userId=#{userId}
+            </if>
+
+    </select>
+    <update id="updateUser" parameterType="com.background.pojo.UserInfo">
+        update userInfo
+        <set>
+            <if test="username!=null and username !=''">
+                username=#{username},
+            </if>
+            <if test="email!=null and email !=''">
+                email=#{email},
+            </if>
+            <if test="name!=null and name !=''">
+                name=#{name}
+            </if>
+        </set>
+        where userId=#{userId}
+    </update>
+    <insert id="addUser" parameterType="com.background.pojo.UserInfo" useGeneratedKeys="true" keyProperty="userId">
+        insert into userInfo(username,password,name,email) values (#{username},#{password},#{name},#{email})
+    </insert>
+    <update id="deleteUser" parameterType="com.background.pojo.UserInfo">
+        update userInfo set status=0 where userId=#{userId}
+    </update>
+    <update id="batchDelete" parameterType="int[]">
+        update userInfo
+        <set>
+            status=0 where userId in
+            <foreach collection="array" separator="," open="(" close=")" item="userId">
+                #{userId}
+            </foreach>
+        </set>
+    </update>
+    <select id="getCount" resultType="int">
+        select count(1) from userInfo where status=1;
+    </select>
+    <select id="getSplitPage" resultType="com.background.pojo.UserInfo" parameterType="com.background.vo.UserInfoVo" >
+        select * from userInfo
+            <where>
+                <if test="username!=null and username !=''">
+                    username=#{username},
+                </if>
+                <if test="email!=null and email !=''">
+                   and email=#{email},
+                </if>
+                <if test="name!=null and name !=''">
+                   and name=#{name}
+                </if>
+            </where>
+           limit #{splitPage.start},#{splitPage.pageSize}
+    </select>
+</mapper>

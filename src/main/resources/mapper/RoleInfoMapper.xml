@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.background.mapper.RoleInfoMapper">
+    <select id="getRoleInfos" parameterType="int" resultType="com.background.dto.RoleInfoDto">
+        SELECT u.userId,r.roleName,r.roleId FROM userinfo u
+          RIGHT JOIN user_role ur on u.userId=ur.userId
+          RIGHT JOIN roleinfo r on ur.roleId=r.roleId and ur.`status`=1 and u.userId=#{userId};
+    </select>
+    <insert id="addRole" parameterType="int">
+        insert into user_role(userId,roleId) SELECT #{userId},roleId from roleinfo
+    </insert>
+    <update id="showRole" parameterType="com.background.vo.ChangeRoleVo">
+        update user_role
+        <set>
+            status=1 where roleId in
+            <foreach collection="allocatedRoleIds" separator="," open="(" close=")" item="roleId">
+                #{roleId}
+            </foreach>
+        and userId=#{userId}
+        </set>
+    </update>
+    <update id="deleteRole" parameterType="com.background.vo.ChangeRoleVo">
+        update user_role
+        <set>
+            status=0 where roleId in
+            <foreach collection="notAllocatedRoleIds" separator="," open="(" close=")" item="roleId">
+                #{roleId}
+            </foreach>
+            and userId=#{userId}
+        </set>
+    </update>
+    <select id="getAllRole" resultType="com.background.pojo.RoleInfo">
+        select * from roleInfo where status=1;
+    </select>
+</mapper>

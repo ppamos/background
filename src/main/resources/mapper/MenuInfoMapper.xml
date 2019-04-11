@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.background.mapper.MenuInfoMapper">
+    <resultMap id="menuInfoMap" type="com.background.dto.MenuInfoDto">
+        <id column="gid" property="id"></id>
+        <result column="gname" property="name"></result>
+        <result column="gpath" property="url"></result>
+        <result column="gicon" property="icon"></result>
+        <result column="gpid" property="pid"></result>
+        <result column="gchecked" property="checked" ></result>
+        <collection property="children" ofType="com.background.dto.MenuInfoDto">
+            <id column="fid" property="id"></id>
+            <result column="fname" property="name"></result>
+            <result column="fpath" property="url"></result>
+            <result column="ficon" property="icon"></result>
+            <result column="fpid" property="pid"></result>
+            <result column="fchecked" property="checked" ></result>
+            <collection property="children" ofType="com.background.dto.MenuInfoDto">
+                <id column="menuId" property="id"></id>
+                <result column="menuName" property="name"></result>
+                <result column="menuPath" property="url"></result>
+                <result column="menuIcon" property="icon"></result>
+                <result column="parentId" property="pid"></result>
+                <result column="pchecked" property="checked" ></result>
+            </collection>
+        </collection>
+    </resultMap>
+    <select id="getMenuInfos" resultMap="menuInfoMap" parameterType="int">
+        SELECT tbl.*, rm.status gchecked,NULLIF(tbl.menuId and 1,null) fchecked,NULLIF(tbl.menuId and rm.status,null) pchecked from role_menu rm
+        right JOIN(SELECT * from (SELECT m1.menuId gid,m1.menuname gname,m1.parentId gpid,m1.menuicon gicon,m1.menupath gpath, m2.menuId fid,m2.menuname fname,m2.parentId fpid,m2.menuicon ficon,m2.menupath fpath
+        from menu m1,menu m2 where m1.parentId=0 and m2.parentId=m1.menuId)
+        tal LEFT  JOIN menu m3 on tal.fid=m3.parentId) as tbl on (rm.menuid=tbl.menuid and rm.roleId=#{roleId})  or (rm.menuId=tbl.fid and tbl.menuId is null and rm.roleId=#{roleId})
+    </select>
+</mapper>
